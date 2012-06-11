@@ -5,8 +5,9 @@
 #include <boost/python/exception_translator.hpp>
 #include <boost/format.hpp>
 
-#include <version.h>
-#include <exceptions.h>
+#include "version/version.h"
+#include "version/exceptions.h"
+
 
 namespace certus { namespace ver { 
 

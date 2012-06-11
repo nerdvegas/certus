@@ -38,6 +38,7 @@ namespace certus { namespace ver {
         
         std::size_t rank() const 						{ return m_tokens.size(); }
         const Token& operator[](std::size_t i) const 	{ assert(i<rank()); return m_tokens[i]; }
+        Token& operator[](std::size_t i) 				{ assert(i<rank()); return m_tokens[i]; }
 		bool operator<(const version& rhs) const 		{ return (m_tokens < rhs.m_tokens); }
 		bool operator>(const version& rhs) const		{ return (m_tokens > rhs.m_tokens); }
 		bool operator<=(const version& rhs) const 		{ return (m_tokens <= rhs.m_tokens); }

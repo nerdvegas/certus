@@ -3,8 +3,10 @@
 
 #include <boost/python.hpp>
 
-#include <version.h>
-#include <version_range.h>
+#include "version/version.h"
+#include "version/version_range.h"
+#include "util.h"
+
 
 namespace certus { namespace ver {
 
@@ -22,31 +24,28 @@ namespace certus { namespace ver {
             .def("__init__",boost::python::make_constructor(defaultInit))
             .def("__init__",boost::python::make_constructor(defaultInitWithBool))
             .def(boost::python::init<const version_type&, const version_type&>())
+            .def_pickle(_str_pickle<version_range_type>())
+            .add_property("lower_bound", bp::make_function(&version_range_type::ge, bp_ret_val()))
+            .add_property("upper_bound", bp::make_function(&version_range_type::lt, bp_ret_val()))
+            .def("__repr__", boost::lexical_cast<std::string,version_range_type>)
             .def("set",&version_range_type::set)
             .def("set_any",&version_range_type::set_any)
             .def("set_none",&version_range_type::set_none)
+            .def("is_any",&version_range_type::is_any)
+            .def("is_none",&version_range_type::is_none)
+            .def("intersects",&version_range_type::intersects)
+            .def("intersect_with",&version_range_type::intersect_with)
             .def(boost::python::self < boost::python::self)
             .def(boost::python::self == boost::python::self)
             .def(boost::python::self != boost::python::self)
-            .def("is_any",&version_range_type::is_any)
-            .def("is_none",&version_range_type::is_none)
-#ifdef TODO
-            //.add_property("ge",&version_range_type::ge)
-            //.add_property("lt",&version_range_type::lt)
-#endif
-            .def("touches",&version_range_type::touches)
-            .def("union_with",&version_range_type::union_with)
-            .def("intersects",&version_range_type::intersects)
-            .def("intersect_with",&version_range_type::intersect_with)
             ;
         }
 
-        static version_range_type *defaultInit(const version_type &v)
-        {
+        static version_range_type *defaultInit(const version_type &v) {
             return new version_range_type(v);
         }
-        static version_range_type *defaultInitWithBool(const version_type &v, bool exact)
-        {
+
+        static version_range_type *defaultInitWithBool(const version_type &v, bool exact) {
             return new version_range_type(v,exact);
         }
     };

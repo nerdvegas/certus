@@ -1,76 +1,69 @@
-###########################################################################
-#
-# CMAKE project for Certus
-#
-###########################################################################
+cmake_minimum_required (VERSION 2.8)
+set (CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 project (certus)
 
-# Set to 1 for super-verbose
-#
-SET(CMAKE_VERBOSE_MAKEFILE 1)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(GetBoost)
 
-# Cerus version
-#
-set (CERTUS_VERSION_MAJOR 0)
-set (CERTUS_VERSION_MINOR 0)
-set (CERTUS_VERSION_PATCH 0)
+set(BOOST_ROOT $ENV{BOOST_ROOT})
 
-# CMake requirements
-#
-cmake_minimum_required (VERSION 2.6)
-set (CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+####
+#### USER EDIT BEGIN HERE...
+####
+# Set paths to other software here
+#set(BOOST_ROOT /wherever/your/boost/is/installed)
+#set(PYTHON_ROOT /wherever/your/python/is/installed)
 
-# Don't allow in-source builds (The root Makefile
-# should prevent this from happening)
-#
-if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    message (FATAL_ERROR "Not allowed to run in-source build!")
-endif ()
+# Set options to ON/OFF here
+option(CERTUS_STATIC_LINK_BOOST "Statically link to boost libs" OFF)
+option(CERTUS_BUILD_PY_BINDINGS "Build python bindings" ON)
+option(CERTUS_BUILD_TEST "Build unit tests" ON)
+####
+#### USER EDIT END HERE.
+####
 
-if (NOT CMAKE_BUILD_TYPE) 
-    set (CMAKE_BUILD_TYPE "Release") 
-endif ()
 
-# Additional cmake files
-#
-set(CERTUS_CMAKE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_MODULE_PATH_ORIG  ${CMAKE_MODULE_PATH})
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH_ORIG} ${CERTUS_CMAKE_PATH})
+set(CERTUS_VERSION_MAJOR 0)
+set(CERTUS_VERSION_MINOR 0)
+set(CERTUS_VERSION_PATCH 0)
+set(CERTUS_VERSION ${CERTUS_VERSION_MAJOR}.${CERTUS_VERSION_MINOR}.${CERTUS_VERSION_PATCH})
+message(STATUS "Building certus-${CERTUS_VERSION}...")
 
-# Find all external requirements
-#
-set(BOOST_ROOT ${BOOST_ROOT})
-include(certus_dependencies)
 
-# Flags
-#
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_definitions ("-DDEBUG=1")
-endif ()
-if (UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+# Find Dependencies
+###############################################################################
+
+message(STATUS "\nFinding boost...")
+if(CERTUS_STATIC_LINK_BOOST)
+    set(Boost_USE_STATIC_LIBS ON)
+endif()
+GetBoost(REQUIRED)
+message(STATUS "Found boost-${Boost_NORMALIZED_VERSION} at ${Boost_LIBRARY_DIRS}")
+
+
+# Include Dependencies
+###############################################################################
+
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+# Build Subdirs
+###############################################################################
+
+add_subdirectory(contrib/pystring)
+include_directories(contrib/pystring)
+link_directories(${CMAKE_BINARY_DIR}/contrib/pystring)
+
+set(_CERTUS_LIBS certus_pystring)
+
+add_subdirectory(core/lib)
+include_directories(core/lib)
+
+if(CERTUS_BUILD_PY_BINDINGS)
+    add_subdirectory(core/py_bind)
 endif()
 
-# Install Locations
-#
-set(CERTUS_INSTALL_BIN_DIR       "${CMAKE_INSTALL_PREFIX}/bin")
-set(CERTUS_INSTALL_LIB_DIR       "${CMAKE_INSTALL_PREFIX}/lib")
-set(CERTUS_INSTALL_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include")
-set(CERTUS_INSTALL_PYTHON_DIR    "${CMAKE_INSTALL_PREFIX}/python")
-message(STATUS "Install directory  ${CMAKE_INSTALL_PREFIX}")
 
-###########################################################################
 
-# Pystring lib
-#
-add_subdirectory(pystring)
-
-# Version library
-#
-add_subdirectory(version)
-
-# Python bindings
-if (Boost_PYTHON_FOUND)
-    add_subdirectory(python)
-endif ()
 

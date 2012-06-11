@@ -40,8 +40,8 @@ namespace certus { namespace ver {
 		bool is_none() const				{ return (m_ranges.size()==1) && m_ranges.begin()->is_none(); }
 		bool is_empty() const				{ return m_ranges.empty(); }
 
-		void union_with(const multi_version_range& v);
 		void union_with(const ver_range_type& v);
+		void union_with(const multi_version_range& v);
 		
 		bool intersects(const ver_range_type& v) const;
 		bool intersects(const multi_version_range& v) const;
@@ -78,8 +78,8 @@ const std::string multi_version_range<Token>::s_empty_str("(empty)");
 
 template<typename Token>
 multi_version_range<Token>::multi_version_range(const ver_range_type& v)
-:	m_ranges(1, v)
 {
+	m_ranges.insert(v);
 }
 
 

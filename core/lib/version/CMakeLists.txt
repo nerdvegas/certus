@@ -1,25 +1,12 @@
-###########################################################################
-#
-# CMAKE project for Certus
-#
-###########################################################################
-include_directories(${PROJECT_SOURCE_DIR}/pystring)
+cmake_minimum_required (VERSION 2.8)
+set (CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+project (certus_version)
 
-# The "version" library
-#
-file(GLOB version_h "*.h")
-set(version_cpp version.cpp)
-add_library(version STATIC ${version_cpp})
-target_link_libraries(version pystring)
 
-install(TARGETS version DESTINATION ${CERTUS_INSTALL_LIB_DIR})
-install(FILES ${version_h} DESTINATION ${CERTUS_INSTALL_INCLUDE_DIR})
+file(GLOB h_files "*.h")
+install(FILES ${h_files} DESTINATION include/certus/version)
 
-# Simple test program
-#
-set(version_test_cpp test.cpp)
-add_executable(test ${version_test_cpp})
-target_link_libraries(test pystring version)
-
-install(TARGETS test DESTINATION ${CERTUS_INSTALL_BIN_DIR})
-
+if(CERTUS_BUILD_TEST)
+    add_executable(version_test test.cpp)
+    target_link_libraries(version_test ${_CERTUS_LIBS})
+endif()

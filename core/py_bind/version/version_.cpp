@@ -1,5 +1,5 @@
-#include "version_bindings.h"
-#include <ver_token_alphanumeric.h>
+#include "version_.h"
+#include "version/ver_token_alphanumeric.h"
 
 void _export_version()
 {
