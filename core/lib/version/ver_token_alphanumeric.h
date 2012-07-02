@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 #include <limits>
+#include <boost/operators.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include "exceptions.h"
 #include "ver_token_unsigned.h"
 
@@ -27,6 +29,9 @@ namespace certus { namespace ver {
 	 */
 	template<typename T>
 	class ver_token_alphanumeric
+	:	boost::less_than_comparable<ver_token_alphanumeric<T>,
+	 	boost::equality_comparable<ver_token_alphanumeric<T>
+		> >
 	{
 	protected:
 	
@@ -49,11 +54,11 @@ namespace certus { namespace ver {
 		
 		bool operator<(const ver_token_alphanumeric& rhs) const		{ return (m_subtoks<rhs.m_subtoks); }
 		bool operator==(const ver_token_alphanumeric& rhs) const	{ return (m_subtoks==rhs.m_subtoks); }
-		bool operator!=(const ver_token_alphanumeric& rhs) const	{ return (m_subtoks!=rhs.m_subtoks); }		
 		
 		ver_token_alphanumeric get_next() const;
 		static ver_token_alphanumeric get_min()			{ return ver_token_alphanumeric(subtok("_")); }
 		static ver_token_alphanumeric get_max()			{ return ver_token_alphanumeric(subtok(std::numeric_limits<T>::max())); }
+		bool as_int(int& result) const;
 		
 		friend std::ostream& operator<< <T>(std::ostream& s, const ver_token_alphanumeric<T>& v);
 	
@@ -143,8 +148,24 @@ std::ostream& operator<<(std::ostream& s, const ver_token_alphanumeric<T>& v)
 		it->write(s);
 	return s;
 }
-	
-		
+
+
+template<typename T>
+bool ver_token_alphanumeric<T>::as_int(int& result) const
+{
+	if(m_subtoks.size() == 1)
+	{
+		const subtok& st = m_subtoks[0];
+		if(st.is_num())
+		{
+			result = boost::numeric_cast<int>(st.m_num);
+			return true;
+		}
+	}
+	return false;
+}
+
+
 } }
 
 #endif

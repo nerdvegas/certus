@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 #include <limits>
+#include <boost/operators.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include "exceptions.h"
 
 
@@ -23,6 +25,9 @@ namespace certus { namespace ver {
 	 */
 	template<typename T>
 	class ver_token_unsigned
+	:	boost::less_than_comparable<ver_token_unsigned<T>,
+	 	boost::equality_comparable<ver_token_unsigned<T>
+		> >
 	{
 	public:
 		ver_token_unsigned(T n):m_n(n){}
@@ -30,7 +35,6 @@ namespace certus { namespace ver {
 		
 		bool operator<(const ver_token_unsigned& rhs) const		{ return (m_n<rhs.m_n); }
 		bool operator==(const ver_token_unsigned& rhs) const	{ return (m_n==rhs.m_n); }
-		bool operator!=(const ver_token_unsigned& rhs) const	{ return (m_n!=rhs.m_n); }		
 		
 		T value() const											{ return m_n; }
 		ver_token_unsigned get_next() const						{ return ver_token_unsigned(m_n+T(1)); }

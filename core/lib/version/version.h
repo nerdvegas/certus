@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
+#include <boost/operators.hpp>
 #include "exceptions.h"
 #include "pystring.h"
 
@@ -25,6 +26,9 @@ namespace certus { namespace ver {
 	 */
 	template<typename Token>
 	class version
+	:	boost::less_than_comparable<version<Token>,
+	 	boost::equality_comparable<version<Token>
+		> >
 	{
 	public:
 		version(){}
@@ -40,11 +44,7 @@ namespace certus { namespace ver {
         const Token& operator[](std::size_t i) const 	{ assert(i<rank()); return m_tokens[i]; }
         Token& operator[](std::size_t i) 				{ assert(i<rank()); return m_tokens[i]; }
 		bool operator<(const version& rhs) const 		{ return (m_tokens < rhs.m_tokens); }
-		bool operator>(const version& rhs) const		{ return (m_tokens > rhs.m_tokens); }
-		bool operator<=(const version& rhs) const 		{ return (m_tokens <= rhs.m_tokens); }
-		bool operator>=(const version& rhs) const		{ return (m_tokens >= rhs.m_tokens); }
 		bool operator==(const version& rhs) const		{ return (m_tokens == rhs.m_tokens); }
-		bool operator!=(const version& rhs) const		{ return (m_tokens != rhs.m_tokens); }
 		
 		version get_next() const;
 		version get_nearest() const;

@@ -28,6 +28,7 @@ namespace certus { namespace ver {
             .def("rank", &version_type::rank)
             .def("get_next",&version_type::get_next)
             .def("get_nearest",&version_type::get_nearest)
+            .def("__getitem__",getItem)
             .def(boost::python::self < boost::python::self)
             .def(boost::python::self > boost::python::self)
             .def(boost::python::self <= boost::python::self)
@@ -35,6 +36,13 @@ namespace certus { namespace ver {
             .def(boost::python::self == boost::python::self)
             .def(boost::python::self != boost::python::self)
             ;
+        }
+
+        static Token getItem(const version_type& self, int i)
+        {
+        	if((i<0) || (i>=self.rank()))
+        		CERTUS_THROW(PyExc_IndexError, "Version index out of range.");
+        	return self[i];
         }
     };
 }}

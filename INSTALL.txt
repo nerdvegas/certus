@@ -9,7 +9,7 @@ To build:
 
 2) cd ./build;
 
-3) Run: cmake -DCMAKE_INSTALL_PREFIX:PATH=<installpath>
+3) Run: cmake -DCMAKE_INSTALL_PREFIX:PATH=<installpath> ../
 
 4) Run: make
 
