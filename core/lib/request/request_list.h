@@ -35,9 +35,6 @@ namespace certus { namespace req {
 		template<typename Iterator>
 		void set(Iterator begin, Iterator end);
 
-		template<typename Iterator>
-		bool set(Iterator begin, Iterator end, request_conflict& conf);
-
 		void add(const request& r);
 		bool add(const request& r, request_conflict& conf);
 		bool remove(const std::string& name);
@@ -61,30 +58,11 @@ namespace certus { namespace req {
 template<typename Iterator>
 void request_list::set(Iterator begin, Iterator end)
 {
-	request_conflict conf;
 	clear();
-
 	for(; begin!=end; ++begin)
-	{
-		if(!this->add(*begin, conf))
-			throw request_conflict_error(conf);
-	}
+		this->add(*begin);
 }
 
-
-template<typename Iterator>
-bool request_list::set(Iterator begin, Iterator end, request_conflict& conf)
-{
-	clear();
-
-	for(; begin!=end; ++begin)
-	{
-		if(!this->add(*begin, conf))
-			return false;
-	}
-
-	return true;
-}
 
 } }
 

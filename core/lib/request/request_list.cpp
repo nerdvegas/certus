@@ -17,9 +17,7 @@ request_list::request_list(const std::string& s)
 		requests.push_back(r);
 	}
 
-	request_conflict conf;
-	if(!set(requests.begin(), requests.end(), conf))
-		throw request_conflict_error(conf);
+	set(requests.begin(), requests.end());
 }
 
 

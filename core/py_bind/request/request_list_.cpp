@@ -24,6 +24,17 @@ request_list* sequenceInit(const bp::object &o)
 }
 
 
+bp::list _requests(const request_list& self)
+{
+	bp::list l;
+	const request_list::request_list_type& reqs = self.requests();
+	for(request_list::request_list_type::const_iterator it=reqs.begin(); it!=reqs.end(); ++it)
+		l.append(bp::object(*it));
+
+	return l;
+}
+
+
 void _export_request_list()
 {
 	void (request_list::*fn_add)(const request&) = &request_list::add;
@@ -38,6 +49,7 @@ void _export_request_list()
     .def("add", fn_add)
     .def("remove", &request_list::remove)
     .def("clear", &request_list::clear)
+    .def("requests", _requests)
     ;
 }
 
