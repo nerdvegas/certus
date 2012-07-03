@@ -18,6 +18,9 @@ namespace certus { namespace ver {
     /*
 	 * Zero or more non-overlapping ranges of version numbers.
 	 * Eg: '1|5', '1.5+<2|5.8'
+	 * The 'Any' range intersects with all versions.
+	 * The 'None' range intersects with only the 'None' version.
+	 * The 'Empty' range intersects with no versions (do not confuse the None and Empty ranges).
 	 */
 	template<typename Token>
 	class multi_version_range
@@ -26,7 +29,7 @@ namespace certus { namespace ver {
 		typedef version<Token> 			ver_type;
 		typedef version_range<Token> 	ver_range_type;
 		
-		multi_version_range(){}
+		multi_version_range(){} // constructs the 'Empty' range
 		multi_version_range(const std::string& s) 	{ set(s); }
 		multi_version_range(const ver_range_type& v);
 		
@@ -40,16 +43,23 @@ namespace certus { namespace ver {
 		bool is_none() const				{ return (m_ranges.size()==1) && m_ranges.begin()->is_none(); }
 		bool is_empty() const				{ return m_ranges.empty(); }
 
+		void union_of(const ver_range_type& v, multi_version_range& result) const;
+		void union_of(const multi_version_range& v, multi_version_range& result) const;
+
 		void union_with(const ver_range_type& v);
 		void union_with(const multi_version_range& v);
 		
 		bool intersects(const ver_range_type& v) const;
 		bool intersects(const multi_version_range& v) const;
 		
-		bool intersect(const ver_range_type& v, multi_version_range& result) const;
-		bool intersect(const multi_version_range& v, multi_version_range& result) const;
-		
+		bool intersection(const ver_range_type& v, multi_version_range& result) const;
+		bool intersection(const multi_version_range& v, multi_version_range& result) const;
+
+		bool intersect(const ver_range_type& v);
+		bool intersect(const multi_version_range& v);
+
 		void inverse(multi_version_range& result) const;
+		void invert();
 		        
 		friend std::ostream& operator<< <Token>(std::ostream& s, const multi_version_range& v);
 		
@@ -214,16 +224,31 @@ void multi_version_range<Token>::union_with(const version_range<Token>& v)
 template<typename Token>
 void multi_version_range<Token>::union_with(const multi_version_range<Token>& v)
 {
-	if(&v == this)
-		return;
-	
 	for(c_it_type it=v.m_ranges.begin(); it!=v.m_ranges.end(); ++it)
 		union_with(*it);
 }
 
 
 template<typename Token>
-bool multi_version_range<Token>::intersects(const ver_range_type& v) const
+void multi_version_range<Token>::union_of(const version_range<Token>& v,
+	multi_version_range<Token>& result) const
+{
+	result = *this;
+	result.union_with(v);
+}
+
+
+template<typename Token>
+void multi_version_range<Token>::union_of(const multi_version_range<Token>& v,
+	multi_version_range<Token>& result) const
+{
+	result = *this;
+	result.union_with(v);
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::intersects(const version_range<Token>& v) const
 {
 	c_it_type it, it_end;
 	return const_cast<multi_version_range*>(this)->get_overlap(v, false, it, it_end);
@@ -243,7 +268,7 @@ bool multi_version_range<Token>::intersects(const multi_version_range<Token>& v)
 
 
 template<typename Token>
-bool multi_version_range<Token>::intersect(const version_range<Token>& v, 
+bool multi_version_range<Token>::intersection(const version_range<Token>& v,
 	multi_version_range<Token>& result) const
 {
 	result.m_ranges.clear();
@@ -254,7 +279,7 @@ bool multi_version_range<Token>::intersect(const version_range<Token>& v,
 		for(; it!=it_end; ++it)
 		{
 			ver_range_type v_(*it);
-			v_.intersect_with(v);
+			v_.intersect(v);
 			result.m_ranges.insert(result.m_ranges.end(), v_);
 		}
 		return true;
@@ -264,13 +289,13 @@ bool multi_version_range<Token>::intersect(const version_range<Token>& v,
 
 
 template<typename Token>
-bool multi_version_range<Token>::intersect(const multi_version_range<Token>& v, 
+bool multi_version_range<Token>::intersection(const multi_version_range<Token>& v,
 	multi_version_range<Token>& result) const
 {
 	if(v.num_ranges() > num_ranges())
 	{
 		// intersection is more optimal when v has less ranges than us
-		return v.intersect(*this, result);
+		return v.intersection(*this, result);
 	}
 	
 	result.m_ranges.clear();
@@ -279,11 +304,29 @@ bool multi_version_range<Token>::intersect(const multi_version_range<Token>& v,
 	for(c_it_type it=v.m_ranges.begin(); it!=v.m_ranges.end(); ++it)
 	{
 		multi_version_range r;
-		b |= intersect(*it, r);
+		b |= intersection(*it, r);
 		result.m_ranges.insert(r.m_ranges.begin(), r.m_ranges.end());
 	}
 	
 	return b;
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::intersect(const version_range<Token>& v)
+{
+	multi_version_range<Token> result;
+	this->intersection(v, result);
+	*this = result;
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::intersect(const multi_version_range<Token>& v)
+{
+	multi_version_range<Token> result;
+	this->intersection(v, result);
+	*this = result;
 }
 
 
@@ -318,6 +361,15 @@ void multi_version_range<Token>::inverse(multi_version_range<Token>& result) con
 		
 		it = it2;
 	}
+}
+
+
+template<typename Token>
+void multi_version_range<Token>::invert()
+{
+	multi_version_range<Token> mvr;
+	this->inverse(mvr);
+	*this = mvr;
 }
 
 

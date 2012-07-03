@@ -57,8 +57,8 @@ link_directories(${CMAKE_BINARY_DIR}/contrib/pystring)
 
 set(_CERTUS_LIBS certus_pystring)
 
-add_subdirectory(core/lib)
 include_directories(core/lib)
+add_subdirectory(core/lib)
 
 if(CERTUS_BUILD_PY_BINDINGS)
     add_subdirectory(core/py_bind)

@@ -6,6 +6,8 @@
 #include "multi_version_range.h"
 #include "ver_token_alphanumeric.h"
 
+// todo remove and write py equivalent? that way the bindings are tested at the same time
+
 using namespace certus;
 
 typedef ver::ver_token_alphanumeric<unsigned int>	tok_type;
@@ -71,14 +73,14 @@ multi_ver_range_type g_intresult;
 bool intersect(ver_range_type& v1, const ver_range_type& v2, const ver_range_type** result)
 {
 	*result = &v1;
-	return v1.intersect_with(v2);
+	return v1.intersect(v2);
 }
 
 bool intersect(const multi_ver_range_type& v1, const multi_ver_range_type& v2, 
 	const multi_ver_range_type** result)
 {
 	*result = &g_intresult;
-	return v1.intersect(v2, g_intresult);
+	return v1.intersection(v2, g_intresult);
 }
 
 

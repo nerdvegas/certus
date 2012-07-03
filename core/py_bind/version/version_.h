@@ -1,10 +1,9 @@
 #ifndef _CERTUS_VER_VERSION_BINDINGS__H_
 #define _CERTUS_VER_VERSION_BINDINGS__H_
 
-#include <boost/python.hpp>
+#include "util/util.h"
 #include <boost/lexical_cast.hpp>
 #include "version/version.h"
-#include "util.h"
 
 
 namespace certus { namespace ver {
@@ -16,10 +15,10 @@ namespace certus { namespace ver {
 
         version_bind(const char *name)
         {
-            boost::python::class_<version_type> cl(name);
+            bp::class_<version_type> cl(name);
             cl
-            .def(boost::python::init<const std::string&>())
-            .def(boost::python::init<const version_type&>())
+            .def(bp::init<const std::string&>())
+            .def(bp::init<const version_type&>())
             .def_pickle(_str_pickle<version_type>())
             .def("__repr__", boost::lexical_cast<std::string,version_type>)
             .def("set", &version_type::set)
@@ -29,12 +28,12 @@ namespace certus { namespace ver {
             .def("get_next",&version_type::get_next)
             .def("get_nearest",&version_type::get_nearest)
             .def("__getitem__",getItem)
-            .def(boost::python::self < boost::python::self)
-            .def(boost::python::self > boost::python::self)
-            .def(boost::python::self <= boost::python::self)
-            .def(boost::python::self >= boost::python::self)
-            .def(boost::python::self == boost::python::self)
-            .def(boost::python::self != boost::python::self)
+            .def(bp::self < bp::self)
+            .def(bp::self > bp::self)
+            .def(bp::self <= bp::self)
+            .def(bp::self >= bp::self)
+            .def(bp::self == bp::self)
+            .def(bp::self != bp::self)
             ;
         }
 

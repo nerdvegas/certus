@@ -4,6 +4,6 @@
 
 void _export_multi_version_range()
 {
-    typedef certus::ver::ver_token_alphanumeric<unsigned int> tok_type;
+    typedef certus::ver::ver_token_alphanumeric<certus::number_type> tok_type;
     certus::ver::multi_version_range_bind<tok_type>("multi_version_range");
 }

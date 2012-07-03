@@ -2,5 +2,5 @@
 
 void _export_ver_token_alphanumeric()
 {
-    certus::ver::ver_token_alphanumeric_bind<unsigned int>("ver_token_alphanumeric");
+    certus::ver::ver_token_alphanumeric_bind<certus::number_type>("ver_token_alphanumeric");
 }

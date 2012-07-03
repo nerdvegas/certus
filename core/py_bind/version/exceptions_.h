@@ -1,34 +1,42 @@
 #ifndef _CERTUS_EXCEPTIONS_BINDINGS__H_
 #define _CERTUS_EXCEPTIONS_BINDINGS__H_ 
 
-#include <boost/python.hpp>
+/*
+#include "util.h"
+#include "sys.h"
+#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
 #include <boost/python/exception_translator.hpp>
-#include <boost/format.hpp>
-
-#include "version/version.h"
-#include "version/exceptions.h"
 
 
-namespace certus { namespace ver { 
+namespace certus {
 
-    struct exception_bind
-    {
-        exception_bind(const char *name)
-        {
-            boost::python::class_<invalid_version_error> cl(name, boost::python::init<const std::string &>());
-            cl.def("__str__",&invalid_version_error::what);
+	PyObject* createExceptionClass(const char* name, PyObject* baseTypeObj);
 
-            boost::python::register_exception_translator<invalid_version_error>(&translate);
-            gExeType = cl.ptr();
-        }
+	template<typename T>
+	struct exception_bind
+	{
+		exception_bind(const char* name)
+		{
+			m_excType = createExceptionClass(name, exception_bind<certus_error>::m_excType);
+			bp::register_exception_translator<T>(&translate);
+		}
 
-        static void translate(const invalid_version_error &e)
-        {
-            boost::python::object pythonExceptionInstance(e);
-            PyErr_SetObject(gExeType, pythonExceptionInstance.ptr());
-        }
+		static void translate(const T& e)
+		{
+			PyErr_SetString(m_excType, e.what());
+		}
 
-        static PyObject *gExeType;
-    };
-}}
+		static PyObject* m_excType;
+	};
+
+	template<>
+	exception_bind<certus_error>::exception_bind(const char* name);
+
+	template<typename T>
+	PyObject* exception_bind<T>::m_excType(NULL);
+
+}
+*/
+
 #endif

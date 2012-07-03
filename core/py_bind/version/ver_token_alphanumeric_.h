@@ -1,11 +1,10 @@
 #ifndef _CERTUS_VER_TOKEN_ALPHANUMERIC_BINDINGS__H_
 #define _CERTUS_VER_TOKEN_ALPHANUMERIC_BINDINGS__H_
 
-#include <boost/python.hpp>
+#include "util/util.h"
 #include <boost/lexical_cast.hpp>
 #include "version/version.h"
 #include "version/ver_token_alphanumeric.h"
-#include "util.h"
 
 
 namespace certus { namespace ver {
@@ -17,8 +16,8 @@ namespace certus { namespace ver {
 
         ver_token_alphanumeric_bind(const char *name)
         {
-            boost::python::class_<token_type> cl(name,
-            	boost::python::init<const std::string &>());
+            bp::class_<token_type> cl(name,
+            	bp::init<const std::string &>());
             cl
             .def_pickle(_str_pickle<token_type>())
             .def("__repr__",boost::lexical_cast<std::string,token_type>)
@@ -26,12 +25,12 @@ namespace certus { namespace ver {
             .def("get_next",&token_type::get_next)
             .def("get_min",&token_type::get_min)
             .def("get_max",&token_type::get_max)
-            .def(boost::python::self < boost::python::self)
-            .def(boost::python::self > boost::python::self)
-            .def(boost::python::self <= boost::python::self)
-            .def(boost::python::self >= boost::python::self)
-            .def(boost::python::self == boost::python::self)
-            .def(boost::python::self != boost::python::self)
+            .def(bp::self < bp::self)
+            .def(bp::self > bp::self)
+            .def(bp::self <= bp::self)
+            .def(bp::self >= bp::self)
+            .def(bp::self == bp::self)
+            .def(bp::self != bp::self)
             ;
         }
 

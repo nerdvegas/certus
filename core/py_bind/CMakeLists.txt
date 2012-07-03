@@ -12,9 +12,16 @@ GetBoost(COMPONENTS python REQUIRED QUIET)
 
 include_directories(${PYTHON_INCLUDE_DIRS})
 link_directories(${PYTHON_LIBRARY_DIRS})
-set(_CERTUS_LIBS "${_CERTUS_LIBS} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES}")
+set(_CERTUS_LIBS ${_CERTUS_LIBS} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES} )
 
 install(FILES __init__.py DESTINATION python/certus)
 
 include_directories(.)
+
+
+add_subdirectory(util)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/util)
+set(_CERTUS_LIBS ${_CERTUS_LIBS} certus_py_util )
+
 add_subdirectory(version)
+add_subdirectory(request)

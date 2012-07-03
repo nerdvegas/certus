@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <limits>
+#include <vector>
 #include <boost/operators.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include "exceptions.h"

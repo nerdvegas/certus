@@ -15,7 +15,14 @@ namespace certus { namespace ver {
     
     /*
 	 * A continuous range of version numbers.
-	 * Eg: '', '1.5+<2', '7.0+', '1.2.'
+	 * Eg: '', '5', '5.4', '1.5+<2', '7.0+', '+<3', '1.2.', '.'
+	 * The 'Any' range intersects with all versions.
+	 * The 'None' range intersects with only the 'None' version.
+	 * A trailing dot turns the range into an 'exact' range. For example, '1.2.' is the range that
+	 * contains only the version '1.2'. '1.2', conversely, contains all versions of the form 1.2[.X.X.X...].
+	 * The form '+<3' includes all versions less than '3', including the None version. It is subtly
+	 * different to (for eg) '0+<3'.
+	 * '.' is a border case - it is the range that contains only the None version.
 	 */
 	template<typename Token>
 	class version_range
@@ -23,7 +30,7 @@ namespace certus { namespace ver {
 	public:
 		typedef version<Token> ver_type;
 		
-		version_range() { set_none(); }
+		version_range() { set_none(); } // constructs the 'None' range
 		version_range(const std::string& s) { set(s); }
 		version_range(const ver_type& v, bool exact=true);
 		version_range(const ver_type& ge, const ver_type& lt);
@@ -45,7 +52,7 @@ namespace certus { namespace ver {
 		bool union_with(const version_range& rhs);
 		
 		bool intersects(const version_range& rhs) const;
-		bool intersect_with(const version_range& rhs);
+		bool intersect(const version_range& rhs);
 		
 		friend std::ostream& operator<< <Token>(std::ostream& s, const version_range& v);
 		
@@ -201,7 +208,7 @@ bool version_range<Token>::union_with(const version_range& rhs)
 
 
 template<typename Token>
-bool version_range<Token>::intersect_with(const version_range& rhs)
+bool version_range<Token>::intersect(const version_range& rhs)
 {
 	if(!intersects(rhs))
 		return false;

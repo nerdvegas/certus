@@ -22,7 +22,9 @@ namespace certus { namespace ver {
 	
 	/*
 	 * A set of one or more tokens, delimited by dots.
-	 * Eg: '1', '1.5'. The null version is denoted as '.'.
+	 * Eg: '', '1', '1.5', '1.5.0'.
+	 * The 'None' version is a special case, it is used to represent an unversioned resource, and
+	 * its string representation is an empty string.
 	 */
 	template<typename Token>
 	class version
@@ -31,7 +33,7 @@ namespace certus { namespace ver {
 		> >
 	{
 	public:
-		version(){}
+		version(){} // constructs the 'None' version
 		version(const std::string& s) { set(s); }
 		version(const Token& t);
 		
