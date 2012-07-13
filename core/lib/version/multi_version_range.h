@@ -26,8 +26,9 @@ namespace certus { namespace ver {
 	class multi_version_range
 	{
 	public:
-		typedef version<Token> 			ver_type;
-		typedef version_range<Token> 	ver_range_type;
+		typedef version<Token> 										ver_type;
+		typedef version_range<Token> 								ver_range_type;
+		typedef typename std::set<ver_range_type>::const_iterator	const_iterator;
 		
 		multi_version_range(){} // constructs the 'Empty' range
 		multi_version_range(const std::string& s) 	{ set(s); }
@@ -43,6 +44,9 @@ namespace certus { namespace ver {
 		bool is_none() const				{ return (m_ranges.size()==1) && m_ranges.begin()->is_none(); }
 		bool is_empty() const				{ return m_ranges.empty(); }
 
+		const_iterator begin() const 		{ return m_ranges.begin(); }
+		const_iterator end() const			{ return m_ranges.end(); }
+
 		void union_of(const ver_range_type& v, multi_version_range& result) const;
 		void union_of(const multi_version_range& v, multi_version_range& result) const;
 
@@ -54,6 +58,9 @@ namespace certus { namespace ver {
 		
 		bool intersection(const ver_range_type& v, multi_version_range& result) const;
 		bool intersection(const multi_version_range& v, multi_version_range& result) const;
+
+		bool discrete_intersection(const ver_range_type& v, multi_version_range& result) const;
+		bool discrete_intersection(const multi_version_range& v, multi_version_range& result) const;
 
 		bool intersect(const ver_range_type& v);
 		bool intersect(const multi_version_range& v);
@@ -308,6 +315,43 @@ bool multi_version_range<Token>::intersection(const multi_version_range<Token>& 
 		result.m_ranges.insert(r.m_ranges.begin(), r.m_ranges.end());
 	}
 	
+	return b;
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::discrete_intersection(const ver_range_type& v,
+	multi_version_range& result) const
+{
+	result.m_ranges.clear();
+
+	c_it_type it, it_end;
+	if(const_cast<multi_version_range*>(this)->get_overlap(v, false, it, it_end))
+	{
+		for(; it!=it_end; ++it)
+		{
+			if(it->is_subset(v))
+				result.m_ranges.insert(result.m_ranges.end(), *it);
+		}
+	}
+	return !result.is_empty();
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::discrete_intersection(const multi_version_range& v,
+	multi_version_range& result) const
+{
+	result.m_ranges.clear();
+	bool b = false;
+
+	for(c_it_type it=v.m_ranges.begin(); it!=v.m_ranges.end(); ++it)
+	{
+		multi_version_range r;
+		b |= discrete_intersection(*it, r);
+		result.m_ranges.insert(r.m_ranges.begin(), r.m_ranges.end());
+	}
+
 	return b;
 }
 

@@ -22,6 +22,7 @@ namespace certus { namespace ver {
             .def_pickle(_str_pickle<version_type>())
             .def("__repr__", boost::lexical_cast<std::string,version_type>)
             .def("set", &version_type::set)
+            .def("append", &version_type::append)
             .def("set_none", &version_type::set_none)
             .def("is_none", &version_type::is_none)
             .def("rank", &version_type::rank)
@@ -40,7 +41,7 @@ namespace certus { namespace ver {
         static Token getItem(const version_type& self, int i)
         {
         	if((i<0) || (i>=self.rank()))
-        		CERTUS_THROW(PyExc_IndexError, "Version index out of range.");
+        		CERTUS_THROW_BP(PyExc_IndexError, "Version index out of range.");
         	return self[i];
         }
     };

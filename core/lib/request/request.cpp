@@ -16,6 +16,14 @@ request::request(const std::string& s)
 }
 
 
+request::request(const std::string& name, const multi_ver_range_type& mvr, bool anti)
+{
+	set_name(name);
+	set_range(mvr);
+	set_anti(anti);
+}
+
+
 void request::set(const std::string& s)
 {
 	m_mvr.set_any();

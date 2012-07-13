@@ -31,6 +31,8 @@ namespace certus { namespace ver {
             .def("set_none",&version_range_type::set_none)
             .def("is_any",&version_range_type::is_any)
             .def("is_none",&version_range_type::is_none)
+            .def("is_superset",&version_range_type::is_superset)
+            .def("is_subset",&version_range_type::is_subset)
             .def("intersects",&version_range_type::intersects)
             .def("intersect",&version_range_type::intersect)
             .def(bp::self < bp::self)

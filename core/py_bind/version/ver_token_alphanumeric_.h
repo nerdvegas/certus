@@ -38,7 +38,7 @@ namespace certus { namespace ver {
         {
         	int result = -1;
         	if(!self.as_int(result))
-        		CERTUS_THROW(PyExc_TypeError, "Version cannot be represented as an integer.");
+        		CERTUS_THROW_BP(PyExc_TypeError, "Version cannot be represented as an integer.");
         	return result;
         }
     };

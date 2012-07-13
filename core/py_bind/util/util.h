@@ -10,7 +10,7 @@
 
 namespace bp = boost::python;
 
-#define CERTUS_THROW(ExcType, Msg) { \
+#define CERTUS_THROW_BP(ExcType, Msg) { \
         std::stringstream strm;                        	\
         strm << Msg;                               		\
         PyErr_SetString(ExcType, strm.str().c_str());   \

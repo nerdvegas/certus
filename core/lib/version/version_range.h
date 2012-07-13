@@ -44,10 +44,15 @@ namespace certus { namespace ver {
 		bool operator!=(const version_range& rhs) const		{ return (m_ge!=rhs.m_ge)||(m_lt!=rhs.m_lt); }
 		
 		inline bool is_any() const			{ return (m_ge.is_none() && (m_lt[0]==Token::get_max())); }
-		inline bool is_none() const			{ return (m_ge.is_none() && (m_lt.rank()==1) && (m_lt[0]==Token::get_min())); }
+		inline bool is_none() const			{ return (m_ge.is_none() && is_exact()); }
+		inline bool is_exact() const		{ return (m_lt == m_ge.get_nearest()); }
 		inline const ver_type& ge() const	{ return m_ge; }
 		inline const ver_type& lt() const	{ return m_lt; }
+		ver_type get_exact_version() const;
 		
+		bool is_superset(const version_range& rhs) const	{ return ((m_ge<=rhs.m_ge) && (m_lt>=rhs.m_lt)); }
+		bool is_subset(const version_range& rhs) const		{ return ((m_ge>=rhs.m_ge) && (m_lt<=rhs.m_lt)); }
+
 		bool touches(const version_range& rhs) const;
 		bool union_with(const version_range& rhs);
 		

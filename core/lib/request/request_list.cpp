@@ -5,27 +5,37 @@
 namespace certus { namespace req {
 
 
-request_list::request_list(const std::string& s)
+request_list::const_iterator request_list::find(const std::string& name) const
 {
-	std::vector<std::string> request_strs;
-	pystring::split(s, request_strs);
-
-	std::vector<request> requests;
-	for(unsigned int i=0; i<request_strs.size(); ++i)
-	{
-		request r(request_strs[i]);
-		requests.push_back(r);
-	}
-
-	set(requests.begin(), requests.end());
+	request_map::const_iterator it = m_requests_lookup.find(name);
+	return (it == m_requests_lookup.end())?
+		m_requests.end() : it->second;
 }
 
 
-void request_list::add(const request& r)
+void request_list::append(const request& r)
 {
-	request_conflict conf;
-	if(!add(r, conf))
-		throw request_conflict_error(conf);
+	requests_iterator it2 = m_requests.insert(m_requests.end(), r);
+	m_requests_lookup.insert(request_map::value_type(r.name(), it2));
+}
+
+
+void request_list::add(const request& r, bool replace)
+{
+	if(replace)
+	{
+		request_map::iterator it = m_requests_lookup.find(r.name());
+		if(it == m_requests_lookup.end())
+			append(r);
+		else
+			*(it->second) = r;
+	}
+	else
+	{
+		request_conflict conf;
+		if(!add(r, conf))
+			throw request_conflict_error(conf);
+	}
 }
 
 
@@ -34,8 +44,7 @@ bool request_list::add(const request& r, request_conflict& conf)
 	request_map::iterator it = m_requests_lookup.find(r.name());
 	if(it == m_requests_lookup.end())
 	{
-		requests_iterator it2 = m_requests.insert(m_requests.end(), r);
-		m_requests_lookup.insert(request_map::value_type(r.name(), it2));
+		append(r);
 	}
 	else
 	{

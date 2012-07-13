@@ -39,6 +39,14 @@ namespace certus { namespace ver {
         	return result;
         }
 
+        template<typename T>
+        static multi_version_range_type _discrete_intersection(const multi_version_range_type& v, const T& t)
+        {
+        	multi_version_range_type result;
+        	v.discrete_intersection(t, result);
+        	return result;
+        }
+
         multi_version_range_bind(const char *name)
         {
             void(multi_version_range_type::*fn_union_with_mvr)(const multi_version_range_type&) =
@@ -81,6 +89,8 @@ namespace certus { namespace ver {
             .def("intersect", fn_intersect_vr)
             .def("intersection", _intersection<multi_version_range_type>)
             .def("intersection", _intersection<version_range_type>)
+            .def("discrete_intersection", _discrete_intersection<multi_version_range_type>)
+            .def("discrete_intersection", _discrete_intersection<version_range_type>)
             ;
         }
     };

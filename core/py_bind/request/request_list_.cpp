@@ -1,6 +1,7 @@
 #include "util/util.h"
 #include "request/request_list.h"
 
+
 using namespace certus;
 using namespace certus::req;
 
@@ -35,20 +36,29 @@ bp::list _requests(const request_list& self)
 }
 
 
+void _add1(request_list& self, const request& r) {
+	self.add(r);
+}
+
+void _add2(request_list& self, const request& r, bool replace = false) {
+	self.add(r, replace);
+}
+
+
 void _export_request_list()
 {
-	void (request_list::*fn_add)(const request&) = &request_list::add;
-
     bp::class_<request_list> cl("request_list");
     cl
-    .def(bp::init<const std::string&>())
+    .def(bp::init<>())
     .def("__init__", bp::make_constructor(sequenceInit))
     .def_pickle(_str_pickle<request>())
     .def("__repr__", boost::lexical_cast<std::string,request_list>)
     .def("set", setContents)
-    .def("add", fn_add)
+    .def("add", _add1)
+    .def("add", _add2)
     .def("remove", &request_list::remove)
     .def("clear", &request_list::clear)
+    .def("empty", &request_list::empty)
     .def("requests", _requests)
     ;
 }

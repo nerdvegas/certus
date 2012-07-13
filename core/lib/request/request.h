@@ -2,15 +2,10 @@
 #define _CERTUS_REQ_REQUEST__H_
 
 #include <string>
-#include "sys.h"
-#include "version/ver_token_alphanumeric.h"
-#include "version/multi_version_range.h"
+#include "version/types.h"
 
 
 namespace certus { namespace req {
-
-	typedef ver::ver_token_alphanumeric<number_type>	ver_token_type;
-	typedef ver::multi_version_range<ver_token_type>	multi_ver_range_type;
 
     // fwd decls
     class request;
@@ -45,6 +40,7 @@ namespace certus { namespace req {
 	{
 	public:
 		request(const std::string& s);
+		request(const std::string& name, const multi_ver_range_type& mvr, bool anti=false);
 
 		void set(const std::string& s);
 		void set_name(const std::string& name);

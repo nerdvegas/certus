@@ -12,7 +12,16 @@ namespace certus { namespace ver {
 	class invalid_version_error : public certus_error
 	{
 	public:
-		invalid_version_error(const std::string& s) : certus_error(s){}
+		explicit invalid_version_error(const std::string& s) : certus_error(s){}
+	};
+
+	/*
+	 * Inexact version error.
+	 */
+	class inexact_version_error : public certus_error
+	{
+	public:
+		explicit inexact_version_error(const std::string& s) : certus_error(s){}
 	};
 
 } }

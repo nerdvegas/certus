@@ -24,4 +24,16 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/util)
 set(_CERTUS_LIBS ${_CERTUS_LIBS} certus_py_util )
 
 add_subdirectory(version)
+
+set(_CERTUS_LIBS ${_CERTUS_LIBS} certus_request )
 add_subdirectory(request)
+
+set(_CERTUS_LIBS ${_CERTUS_LIBS} certus_object certus_resolve )
+add_subdirectory(resolve)
+
+
+
+
+
+
+

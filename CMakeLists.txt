@@ -52,6 +52,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 ###############################################################################
 
 add_subdirectory(contrib/pystring)
+include_directories(contrib)
 include_directories(contrib/pystring)
 link_directories(${CMAKE_BINARY_DIR}/contrib/pystring)
 

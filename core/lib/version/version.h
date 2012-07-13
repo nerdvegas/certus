@@ -38,11 +38,12 @@ namespace certus { namespace ver {
 		version(const Token& t);
 		
 		void set(const std::string& s);
-		inline void set_none() 			{ m_tokens.clear(); }
+		void append(const Token& t)						{ m_tokens.push_back(t); }
+		inline void set_none() 							{ m_tokens.clear(); }
 		
-		inline bool is_none() const 	{ return m_tokens.empty(); }
-        
+		inline bool is_none() const 					{ return m_tokens.empty(); }
         std::size_t rank() const 						{ return m_tokens.size(); }
+        
         const Token& operator[](std::size_t i) const 	{ assert(i<rank()); return m_tokens[i]; }
         Token& operator[](std::size_t i) 				{ assert(i<rank()); return m_tokens[i]; }
 		bool operator<(const version& rhs) const 		{ return (m_tokens < rhs.m_tokens); }

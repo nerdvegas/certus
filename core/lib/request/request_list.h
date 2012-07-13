@@ -10,13 +10,12 @@
 
 namespace certus { namespace req {
 
-
-	// fwd decls
+	// fwd decl
 	class request_list;
 	std::ostream& operator<<(std::ostream&, const request_list&);
 
 	/*
-	 * A 'request list' is a list of requests that a user would like to satisfy. Objects can be
+	 * A 'request list' is a list of requests that a user would like to resolve. Objects can be
 	 * added to the list, and if an object is already there, the new request's range is intersected
 	 * with the existing, or an error occurs if there is no intersection. The order of requests
 	 * is maintained, since this can affect the resolve.
@@ -24,10 +23,10 @@ namespace certus { namespace req {
 	class request_list
 	{
 	public:
-		typedef std::list<request> request_list_type;
+		typedef std::list<request>					request_list_type;
+		typedef request_list_type::const_iterator	const_iterator;
 
 		request_list(){}
-		request_list(const std::string& s);
 
 		template<typename Iterator>
 		request_list(Iterator begin, Iterator end) { set(begin, end); }
@@ -35,12 +34,20 @@ namespace certus { namespace req {
 		template<typename Iterator>
 		void set(Iterator begin, Iterator end);
 
-		void add(const request& r);
+		void add(const request& r, bool replace = false);
 		bool add(const request& r, request_conflict& conf);
 		bool remove(const std::string& name);
 		void clear();
 
-		const request_list_type& requests() const { return m_requests; }
+		bool empty() const 							{ return m_requests.empty(); }
+		const request_list_type& requests() const	{ return m_requests; }
+
+		const_iterator begin() const	{ return m_requests.begin(); }
+		const_iterator end() const 		{ return m_requests.end(); }
+		const_iterator find(const std::string& name) const;
+
+	protected:
+		void append(const request& r);
 
 	protected:
 		typedef request_list_type::iterator 				requests_iterator;
