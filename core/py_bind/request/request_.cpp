@@ -16,5 +16,7 @@ void _export_request()
     .def("set_anti", &request::set_anti)
     .add_property("name", bp::make_function(&request::name, bp_ret_val()), &request::set_name)
     .add_property("range", bp::make_function(&request::range, bp_ret_val()), &request::set_range)
+    .def(bp::self == bp::self)
+    .def(bp::self != bp::self)
     ;
 }

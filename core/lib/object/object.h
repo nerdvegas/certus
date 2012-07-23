@@ -35,7 +35,10 @@ namespace certus {
 	{
 		object(const std::string& name, const version_type& v, ptree_ptr metadata);
 		~object(){}
-		std::string qualified_name() const;
+		std::string qualified_name(bool show_empty_variant = false) const;
+
+		static std::string get_qualified_name(const std::string& name, const version_type& v,
+			int variant_index = -1, bool show_empty_variant = false);
 
 		std::string m_name;
 		version_type m_version;

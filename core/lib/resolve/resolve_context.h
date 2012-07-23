@@ -6,6 +6,8 @@
 #include <boost/shared_ptr.hpp>
 #include "object/object_source.h"
 #include "request/request_list.h"
+#include "resolve_settings.h"
+#include "resolve_graph.h"
 
 
 namespace certus { namespace res {
@@ -21,52 +23,14 @@ namespace certus { namespace res {
 	{
 	public:
 
-		struct settings : public obj::object_source::settings
-		{
-			settings();
-
-			// print warnings to stderr
-			bool m_print_warnings;
-
-			// 0: Nothing is printed.
-			// 1: Failed resolves are printed.
-			// 2: Every resolve is printed.
-			// 3: Resolve sub-sections are printed.
-			// 4: Caching information is printed.
-			unsigned int m_verbosity;
-
-			// color certus's output so it's easier to read
-			bool m_colored_output;
-
-			// number of resolve attempts until the resolve aborts, no limit if zero
-			unsigned int m_max_attempts;
-
-			// number of seconds until resolve aborts, no limit if zero
-			unsigned int m_timeout_secs;
-
-			// silently discard requests for nonexistent objects
-			bool m_discard_nonexistent_objects;
-
-			// throw an exception on requests for nonexistent objects (disregarded when
-			// m_discard_nonexistent_objects is true).
-			bool m_throw_on_nonexistent_objects;
-
-			// silently discard anti-requests for nonexistent objects
-			bool m_discard_nonexistent_anti_objects;
-
-			// throw an exception on anti-requests for nonexistent objects (disregarded when
-			// m_discard_nonexistent_anti_objects is true).
-			bool m_throw_on_nonexistent_anti_objects;
-
-			// throw an exception on requests for object versions that do not exist.
-			bool m_throw_on_nonexistent_object_versions;
-		};
+		typedef std::pair<unsigned int, std::string> annotation_type;
 
 		struct resolve_result
 		{
 			std::vector<object_ptr> m_objects;
 			unsigned int m_num_attempts;
 			std::string m_graph;
+			std::vector<annotation_type> m_annotations;
 		};
 
 		enum resolve_status
@@ -87,7 +51,7 @@ namespace certus { namespace res {
 		// testing, just here for py binding atm
 		resolve_context(){}
 
-		resolve_context(object_source_ptr obj_src, const settings& s = settings());
+		resolve_context(object_source_ptr obj_src, const resolve_settings& s = resolve_settings());
 		~resolve_context(){}
 
 		resolve_status resolve(const req::request_list& rl, resolve_result& result);
@@ -100,32 +64,13 @@ namespace certus { namespace res {
 		{
 			ERROR_OK = 0,
 			ERROR_NONEXISTENT_OBJECT,
+			ERROR_NONEXISTENT_ANTI_OBJECT,
 			ERROR_NONEXISTENT_OBJECT_VERSION,
 			ERROR_CONFLICT,
 			ERROR_MAX_ATTEMPTS,
 			ERROR_TIMEOUT
 		};
 
-		enum edge_type
-		{
-			EDGE_NORMALISE = 0,
-			EDGE_REQUIRES,
-			EDGE_RESOLVE,
-			EDGE_CONFLICT,
-			EDGE_NONEXISTENT_OBJECT,
-			EDGE_NONEXISTENT_OBJECT_VERSION
-		};
-
-		struct graph_edge
-		{
-			graph_edge(edge_type etype, const std::string& object_name)
-			: m_type(etype), m_object_name(object_name){}
-
-			edge_type m_type;
-			std::string m_object_name;
-		};
-
-		typedef std::vector<graph_edge> graph_edge_vector;
 
 		struct variant_key : public std::pair<version_type,int>
 		{
@@ -135,7 +80,10 @@ namespace certus { namespace res {
 			const int variant_index() const { return this->second; }
 		};
 
+		typedef std::vector<object_ptr>					object_vector;
 		typedef std::map<variant_key, object_ptr>		object_map;
+		typedef object_map::iterator					object_map_it;
+		typedef std::pair<object_map_it,object_map_it>	object_map_range;
 		typedef std::map<version_type, boost::any> 		object_handle_blind_map;
 
 		/*
@@ -144,7 +92,6 @@ namespace certus { namespace res {
 		struct object_cache
 		{
 			std::string m_object_name;
-			multi_ver_range_type m_all_versions;
 			object_map m_objects;
 			object_handle_blind_map m_object_blind_data;
 		};
@@ -156,10 +103,17 @@ namespace certus { namespace res {
 		 */
 		struct request_working_data
 		{
-			object_map m_objects;
+			request_working_data():m_common_requires_added(false){}
+
+			multi_ver_range_type m_mvr;
+			std::vector<version_type> m_versions;
+			object_vector m_objects;
+			object_ptr m_resolved_object;
+			bool m_common_requires_added;
 		};
 
-		typedef std::map<std::string, request_working_data> request_data_map;
+		typedef boost::shared_ptr<request_working_data> rwd_ptr;
+		typedef std::map<std::string, rwd_ptr> request_data_map;
 
 		/*
 		 * Internal data shared across recursive resolve calls
@@ -179,12 +133,14 @@ namespace certus { namespace res {
 
 		struct local_working_data
 		{
-			local_working_data(lwd_cptr parent=lwd_cptr()): m_parent(parent){}
+			local_working_data(lwd_cptr parent = lwd_cptr());
 
 			lwd_cptr m_parent;
 			req::request_list m_rl;
 			request_data_map m_request_data;
-			graph_edge_vector m_edges;
+			resolve_graph_ptr m_graph;
+			unsigned int m_annotation_index;
+			std::vector<annotation_type> m_annotations;
 		};
 
 		typedef std::pair<lwd_cptr, error_type> recurse_resolve_result;
@@ -192,21 +148,53 @@ namespace certus { namespace res {
 	protected:
 
 		/*
-		 * Internal recursive resolve method.
+		 * Internal resolve methods.
 		 */
-		recurse_resolve_result _resolve(shared_working_data& swd, lwd_cptr lwd_parent);
+		recurse_resolve_result resolve_recurse(shared_working_data& swd, lwd_ptr lwdp);
 
-		error_type filter_nonexistent_objects(local_working_data& lwd);
+		error_type resolve_without_selection(local_working_data& lwd);
+
+		bool is_fully_resolved(local_working_data& lwd);
+
+		error_type remove_nonexistent_objects(local_working_data& lwd);
 
 		error_type normalise_requests(local_working_data& lwd);
 
-		void create_graph(const req::request_list& rl_top, lwd_cptr lwd, resolve_result& result);
+		error_type remove_conflicting_requests(local_working_data& lwd);
+
+		void get_normalised_lite(const req::request_list& rl, req::request_list& result);
+
+		error_type add_common_dependencies(local_working_data& lwd);
+
+		bool add_request(local_working_data& lwd, const req::request& req_parent,
+			const req::request& req_child);
+
+		void process_result(const req::request_list& rl_top, lwd_cptr lwd, resolve_result& result);
 
 		/*
 		 * Get the object map for the given object name. Returns false if an object by that name
 		 * does not exist.
 		 */
-		object_cache* get_object_cache(const std::string& object_name, bool expected=false);
+		object_cache* get_object_cache(const std::string& object_name);
+
+		/*
+		 * Return the objects that match the given version range.
+		 */
+		enum request_normalise_clipping_mode
+		{
+			RNCM_NONE = 0,		// give the most readable result
+			RNCM_CLIP_TO_RANGE,	// readable, but also guaranteed to be clipped within 'mvr'
+			RNCM_CLIP_TIGHT		// less readable but boundaries of ranges are exact
+		};
+
+		bool get_object_versions(object_cache* ocache, const multi_ver_range_type& mvr,
+			multi_ver_range_type* normalised_mvr, std::vector<version_type>* versions);
+			//request_normalise_clipping_mode clip_mode = RNCM_CLIP_TIGHT);
+
+		/*
+		 * Return the list of objects that match the given version.
+		 */
+		object_map_range get_objects(object_cache* ocache, const version_type& v);
 
 		inline bool print_failed_resolves() const 			{ return (m_settings.m_verbosity >= 1); }
 		inline bool print_resolves() const 					{ return (m_settings.m_verbosity >= 2); }
@@ -215,11 +203,12 @@ namespace certus { namespace res {
 
 	protected:
 
-		settings m_settings;
+		resolve_settings m_settings;
 		object_source_ptr m_obj_src;
 		const char** m_colors;
 
 		object_cache_map m_objects_cache;
+		std::set<std::string> m_nonexistent_objects;
 	};
 
 } }

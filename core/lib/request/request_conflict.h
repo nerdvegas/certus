@@ -14,7 +14,8 @@ namespace certus { namespace req {
 		request_conflict(){}
 		request_conflict(const request& a, const request& b)	{ set(a,b); }
 		void set(const request& a, const request& b)			{ m_a=a; m_b=b; }
-		request m_a, m_b;
+		request m_a; // the request that was already there
+		request m_b; // the request that was added
 	};
 
 	std::ostream& operator<<(std::ostream&, const request_conflict&);

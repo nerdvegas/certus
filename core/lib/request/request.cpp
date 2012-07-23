@@ -1,6 +1,7 @@
 #include "request.h"
 #include "exceptions.h"
 #include "pystring.h"
+#include "util/io_utils.h"
 
 
 namespace certus { namespace req {
@@ -71,7 +72,7 @@ void request::set_name(const std::string& name)
 
 	for(unsigned int i=0; i<name.size(); ++i)
 		if(!((name[i]>='a' && name[i]<='z') || (name[i]=='_')))
-			throw invalid_request_error("Name must contain only a-z,_.");
+			CERTUS_THROW(invalid_request_error, "Name must contain only a-z,_ - '" << name << "'");
 
 	m_name = name;
 }
@@ -82,6 +83,29 @@ void request::set_range(const multi_ver_range_type& mvr)
 	if(mvr.is_empty())
 		throw invalid_request_error(_g_empty_mvr_str);
 	m_mvr = mvr;
+}
+
+
+bool request::operator==(const request& rhs) const
+{
+	return ((m_name == rhs.m_name)
+		&& (m_is_anti == rhs.m_is_anti)
+		&& (m_mvr == rhs.m_mvr));
+}
+
+
+bool request::operator!=(const request& rhs) const
+{
+	return ((m_name != rhs.m_name)
+		|| (m_is_anti != rhs.m_is_anti)
+		|| (m_mvr != rhs.m_mvr));
+}
+
+
+// note this is here purely so requests can be used as keys
+bool request::operator<(const request& rhs) const
+{
+	return (util::to_str(*this) < util::to_str(rhs));
 }
 
 

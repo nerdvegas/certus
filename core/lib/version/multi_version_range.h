@@ -26,26 +26,49 @@ namespace certus { namespace ver {
 	class multi_version_range
 	{
 	public:
-		typedef version<Token> 										ver_type;
-		typedef version_range<Token> 								ver_range_type;
-		typedef typename std::set<ver_range_type>::const_iterator	const_iterator;
+		typedef version<Token> 												ver_type;
+		typedef version_range<Token> 										ver_range_type;
+		typedef typename std::set<ver_range_type>::iterator					iterator;
+		typedef typename std::set<ver_range_type>::const_iterator			const_iterator;
+		typedef typename std::set<ver_range_type>::reverse_iterator			reverse_iterator;
+		typedef typename std::set<ver_range_type>::const_reverse_iterator	const_reverse_iterator;
 		
 		multi_version_range(){} // constructs the 'Empty' range
-		multi_version_range(const std::string& s) 	{ set(s); }
-		multi_version_range(const ver_range_type& v);
+		explicit multi_version_range(const std::string& s) 	{ set(s); }
+		explicit multi_version_range(const ver_range_type& v);
 		
+		bool operator==(const multi_version_range& rhs) const	{ return (m_ranges==rhs.m_ranges); }
+		bool operator!=(const multi_version_range& rhs) const	{ return (m_ranges!=rhs.m_ranges); }
+
 		void set(const std::string& s);
 		void set_any();
 		void set_none();
 		void set_empty()					{ m_ranges.clear(); }
 		
 		std::size_t num_ranges() const		{ return m_ranges.size(); }
+		bool is_empty() const				{ return m_ranges.empty(); }
 		bool is_any() const					{ return (m_ranges.size()==1) && m_ranges.begin()->is_any(); }
 		bool is_none() const				{ return (m_ranges.size()==1) && m_ranges.begin()->is_none(); }
-		bool is_empty() const				{ return m_ranges.empty(); }
+		inline bool is_exact() const		{ return (m_ranges.size()==1) && m_ranges.begin()->is_exact(); }
 
-		const_iterator begin() const 		{ return m_ranges.begin(); }
-		const_iterator end() const			{ return m_ranges.end(); }
+		iterator begin() 						{ return m_ranges.begin(); }
+		iterator end()							{ return m_ranges.end(); }
+		reverse_iterator rbegin() 				{ return m_ranges.rbegin(); }
+		reverse_iterator rend()					{ return m_ranges.rend(); }
+
+		const_iterator begin() const 			{ return m_ranges.begin(); }
+		const_iterator end() const				{ return m_ranges.end(); }
+		const_reverse_iterator rbegin() const 	{ return m_ranges.rbegin(); }
+		const_reverse_iterator rend() const		{ return m_ranges.rend(); }
+
+		void erase(iterator it)				{ m_ranges.erase(it); }
+		bool get_exact_version(ver_type& v) const;
+
+		bool is_superset(const ver_range_type& v) const;
+		bool is_superset(const multi_version_range& v) const;
+
+		template<typename T>
+		bool is_subset(const T& v) const;
 
 		void union_of(const ver_range_type& v, multi_version_range& result) const;
 		void union_of(const multi_version_range& v, multi_version_range& result) const;
@@ -58,6 +81,9 @@ namespace certus { namespace ver {
 		
 		bool intersection(const ver_range_type& v, multi_version_range& result) const;
 		bool intersection(const multi_version_range& v, multi_version_range& result) const;
+
+		bool discrete_intersects(const ver_range_type& v) const;
+		bool discrete_intersects(const multi_version_range& v) const;
 
 		bool discrete_intersection(const ver_range_type& v, multi_version_range& result) const;
 		bool discrete_intersection(const multi_version_range& v, multi_version_range& result) const;
@@ -152,6 +178,46 @@ void multi_version_range<Token>::set_none()
 	v.set_none();
 	m_ranges.clear();
 	m_ranges.insert(v);
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::get_exact_version(version<Token>& v) const
+{
+	if(!is_exact())
+		return false;
+	return m_ranges[0].get_exact_version(v);
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::is_superset(const multi_version_range<Token>& v) const
+{
+	multi_version_range result;
+	if(!intersection(v, result))
+		return false;
+	return (result == v);
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::is_superset(const version_range<Token>& v) const
+{
+	multi_version_range result;
+	if(!intersection(v, result))
+		return false;
+	return ((result.m_ranges.size()==1) && (*(result.m_ranges.begin()) == v));
+}
+
+
+template<typename Token>
+template<typename T>
+bool multi_version_range<Token>::is_subset(const T& v) const
+{
+	multi_version_range result;
+	if(!intersection(v, result))
+		return false;
+	return (result == *this);
 }
 
 
@@ -320,6 +386,34 @@ bool multi_version_range<Token>::intersection(const multi_version_range<Token>& 
 
 
 template<typename Token>
+bool multi_version_range<Token>::discrete_intersects(const ver_range_type& v) const
+{
+	c_it_type it, it_end;
+	if(const_cast<multi_version_range*>(this)->get_overlap(v, false, it, it_end))
+	{
+		for(; it!=it_end; ++it)
+		{
+			if(it->is_subset(v))
+				return true;
+		}
+	}
+	return false;
+}
+
+
+template<typename Token>
+bool multi_version_range<Token>::discrete_intersects(const multi_version_range& v) const
+{
+	for(c_it_type it=v.m_ranges.begin(); it!=v.m_ranges.end(); ++it)
+	{
+		if(discrete_intersects(*it))
+			return true;
+	}
+	return false;
+}
+
+
+template<typename Token>
 bool multi_version_range<Token>::discrete_intersection(const ver_range_type& v,
 	multi_version_range& result) const
 {
@@ -396,9 +490,9 @@ void multi_version_range<Token>::inverse(multi_version_range<Token>& result) con
 		c_it_type it2=it; ++it2;
 		if(it2 == m_ranges.end())
 		{
-			Token tmax = Token::get_max();
-			if(it->lt() != tmax)
-				result.m_ranges.insert(result.m_ranges.end(), ver_range_type(it->lt(), tmax));				
+			ver_type vmax(Token::get_max());
+			if(it->lt() != vmax)
+				result.m_ranges.insert(result.m_ranges.end(), ver_range_type(it->lt(), vmax));
 		}
 		else
 			result.m_ranges.insert(result.m_ranges.end(), ver_range_type(it->lt(), it2->ge()));

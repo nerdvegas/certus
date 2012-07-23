@@ -39,13 +39,17 @@ namespace certus { namespace req {
 	class request
 	{
 	public:
-		request(const std::string& s);
+		explicit request(const std::string& s);
 		request(const std::string& name, const multi_ver_range_type& mvr, bool anti=false);
 
 		void set(const std::string& s);
 		void set_name(const std::string& name);
 		void set_range(const multi_ver_range_type& mvr);
 		void set_anti(bool anti)					{ m_is_anti=anti; }
+
+		bool operator==(const request& rhs) const;
+		bool operator!=(const request& rhs) const;
+		bool operator<(const request& rhs) const;
 
 		const std::string& name() const 			{ return m_name; }
 		const multi_ver_range_type& range() const 	{ return m_mvr; }

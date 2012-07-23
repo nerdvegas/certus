@@ -91,6 +91,8 @@ namespace certus { namespace ver {
             .def("intersection", _intersection<version_range_type>)
             .def("discrete_intersection", _discrete_intersection<multi_version_range_type>)
             .def("discrete_intersection", _discrete_intersection<version_range_type>)
+            .def(bp::self == bp::self)
+            .def(bp::self != bp::self)
             ;
         }
     };

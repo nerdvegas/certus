@@ -31,8 +31,8 @@ namespace certus { namespace ver {
 		typedef version<Token> ver_type;
 		
 		version_range() { set_none(); } // constructs the 'None' range
-		version_range(const std::string& s) { set(s); }
-		version_range(const ver_type& v, bool exact=true);
+		explicit version_range(const std::string& s) { set(s); }
+		explicit version_range(const ver_type& v, bool exact=true);
 		version_range(const ver_type& ge, const ver_type& lt);
 
 		void set(const std::string& s);
@@ -48,7 +48,7 @@ namespace certus { namespace ver {
 		inline bool is_exact() const		{ return (m_lt == m_ge.get_nearest()); }
 		inline const ver_type& ge() const	{ return m_ge; }
 		inline const ver_type& lt() const	{ return m_lt; }
-		ver_type get_exact_version() const;
+		bool get_exact_version(ver_type& v) const;
 		
 		bool is_superset(const version_range& rhs) const	{ return ((m_ge<=rhs.m_ge) && (m_lt>=rhs.m_lt)); }
 		bool is_subset(const version_range& rhs) const		{ return ((m_ge>=rhs.m_ge) && (m_lt<=rhs.m_lt)); }
@@ -181,6 +181,16 @@ bool version_range<Token>::operator<(const version_range& rhs) const
 {
 	return (m_ge < rhs.m_ge) ||
 		((m_ge == rhs.m_ge) && (m_lt < rhs.m_lt));
+}
+
+
+template<typename Token>
+bool version_range<Token>::get_exact_version(version<Token>& v) const
+{
+	if(!is_exact())
+		return false;
+	v = m_ge;
+	return true;
 }
 
 

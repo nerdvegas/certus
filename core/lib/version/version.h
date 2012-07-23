@@ -33,10 +33,25 @@ namespace certus { namespace ver {
 		> >
 	{
 	public:
+		typedef typename std::vector<Token>::iterator				iterator;
+		typedef typename std::vector<Token>::const_iterator			const_iterator;
+		typedef typename std::vector<Token>::reverse_iterator		reverse_iterator;
+		typedef typename std::vector<Token>::const_reverse_iterator	const_reverse_iterator;
+
 		version(){} // constructs the 'None' version
-		version(const std::string& s) { set(s); }
-		version(const Token& t);
+		explicit version(const std::string& s) { set(s); }
+		explicit version(const Token& t);
 		
+		iterator begin() 						{ return m_tokens.begin(); }
+		iterator end()							{ return m_tokens.end(); }
+		reverse_iterator rbegin() 				{ return m_tokens.rbegin(); }
+		reverse_iterator rend()					{ return m_tokens.rend(); }
+
+		const_iterator begin() const 			{ return m_tokens.begin(); }
+		const_iterator end() const				{ return m_tokens.end(); }
+		const_reverse_iterator rbegin() const 	{ return m_tokens.rbegin(); }
+		const_reverse_iterator rend() const		{ return m_tokens.rend(); }
+
 		void set(const std::string& s);
 		void append(const Token& t)						{ m_tokens.push_back(t); }
 		inline void set_none() 							{ m_tokens.clear(); }
@@ -51,6 +66,7 @@ namespace certus { namespace ver {
 		
 		version get_next() const;
 		version get_nearest() const;
+		bool get_parent(version& v) const;
         
 		friend std::ostream& operator<< <Token>(std::ostream& s, const version& v);
 		friend class version_range<Token>;
@@ -116,7 +132,18 @@ version<Token> version<Token>::get_nearest() const
 	v.m_tokens.push_back(Token::get_min());
 	return v;
 }
-	
+
+
+template<typename Token>
+bool version<Token>::get_parent(version& v) const
+{
+	if(is_none())
+		return false;
+	v = *this;
+	v.m_tokens.pop_back();
+	return true;
+}
+
 
 template<typename Token>
 std::ostream& operator<<(std::ostream& s, const version<Token>& v)

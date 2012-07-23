@@ -19,9 +19,18 @@ void setContents(request_list& self, const bp::object &o)
 
 request_list* sequenceInit(const bp::object &o)
 {
-	request_list* rl = new request_list();
-	setContents(*rl, o);
-	return rl;
+	bp::extract<std::string> get_str(o);
+	if(get_str.check())
+	{
+		request_list* rl = new request_list(get_str());
+		return rl;
+	}
+	else
+	{
+		request_list* rl = new request_list();
+		setContents(*rl, o);
+		return rl;
+	}
 }
 
 
@@ -51,7 +60,7 @@ void _export_request_list()
     cl
     .def(bp::init<>())
     .def("__init__", bp::make_constructor(sequenceInit))
-    .def_pickle(_str_pickle<request>())
+    .def_pickle(_str_pickle<request_list>())
     .def("__repr__", boost::lexical_cast<std::string,request_list>)
     .def("set", setContents)
     .def("add", _add1)
@@ -60,6 +69,8 @@ void _export_request_list()
     .def("clear", &request_list::clear)
     .def("empty", &request_list::empty)
     .def("requests", _requests)
+    .def(bp::self == bp::self)
+    .def(bp::self != bp::self)
     ;
 }
 

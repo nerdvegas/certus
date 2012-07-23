@@ -15,6 +15,17 @@ namespace certus { namespace util {
 
 	const unsigned int g_max_chars = 80;
 
+
+	/*
+	 * Return the string representation of an object
+	 */
+	template<typename T>
+	std::string to_str(const T& t)
+	{
+		return boost::lexical_cast<std::string>(t);
+	}
+
+
 	/*
 	 * Print a sequence
 	 */

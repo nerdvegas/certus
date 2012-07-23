@@ -4,6 +4,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include "filesystem_object_source.h"
 #include "version/exceptions.h"
+#include "exceptions.h"
 
 
 namespace bf = boost::filesystem;
@@ -14,7 +15,13 @@ namespace certus { namespace obj {
 
 void filesystem_object_source::load_json(const std::string& path, boost::property_tree::ptree& pt)
 {
-	boost::property_tree::json_parser::read_json(path, pt);
+	using namespace boost::property_tree::json_parser;
+
+	try {
+		read_json(path, pt);
+	} catch(const json_parser_error& e) {
+		CERTUS_THROW(invalid_object_error, "Json parser error: " << e.what());
+	}
 }
 
 

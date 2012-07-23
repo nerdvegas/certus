@@ -5,6 +5,16 @@
 namespace certus { namespace req {
 
 
+request_list::request_list(const std::string& s)
+{
+	std::vector<std::string> req_strs;
+	pystring::split(s, req_strs);
+
+	for(unsigned int i=0; i<req_strs.size(); ++i)
+		add(request(req_strs[i]));
+}
+
+
 request_list::const_iterator request_list::find(const std::string& name) const
 {
 	request_map::const_iterator it = m_requests_lookup.find(name);
@@ -39,11 +49,13 @@ void request_list::add(const request& r, bool replace)
 }
 
 
-bool request_list::add(const request& r, request_conflict& conf)
+bool request_list::add(const request& r, request_conflict& conf, bool test_only)
 {
 	request_map::iterator it = m_requests_lookup.find(r.name());
 	if(it == m_requests_lookup.end())
 	{
+		if(test_only)
+			return true;
 		append(r);
 	}
 	else
@@ -79,10 +91,21 @@ bool request_list::add(const request& r, request_conflict& conf)
 			conf.set(r_exist, r);
 			return false;
 		}
-		else
+		else if(!test_only)
 			r_exist.m_mvr = result;
 	}
 
+	return true;
+}
+
+
+bool request_list::add(const request_list& rl, request_conflict& conf, bool test_only)
+{
+	for(const_iterator it=rl.begin(); it!=rl.end(); ++it)
+	{
+		if(!add(*it, conf, test_only))
+			return false;
+	}
 	return true;
 }
 
@@ -96,6 +119,16 @@ bool request_list::remove(const std::string& name)
 	m_requests.erase(it->second);
 	m_requests_lookup.erase(it);
 	return true;
+}
+
+
+request_list& request_list::operator=(const request_list& rhs)
+{
+	clear();
+
+	for(const_iterator it=rhs.begin(); it!=rhs.end(); ++it)
+		add(*it, true);
+	return *this;
 }
 
 

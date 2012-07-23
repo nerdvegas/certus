@@ -27,6 +27,7 @@ namespace certus { namespace req {
 		typedef request_list_type::const_iterator	const_iterator;
 
 		request_list(){}
+		request_list(const std::string& s);
 
 		template<typename Iterator>
 		request_list(Iterator begin, Iterator end) { set(begin, end); }
@@ -34,8 +35,13 @@ namespace certus { namespace req {
 		template<typename Iterator>
 		void set(Iterator begin, Iterator end);
 
+		bool operator==(const request_list& rhs) const { return (m_requests == rhs.m_requests); }
+		bool operator!=(const request_list& rhs) const { return (m_requests != rhs.m_requests); }
+		request_list& operator=(const request_list& rhs);
+
 		void add(const request& r, bool replace = false);
-		bool add(const request& r, request_conflict& conf);
+		bool add(const request& r, request_conflict& conf, bool test_only = false);
+		bool add(const request_list& rl, request_conflict& conf, bool test_only = false);
 		bool remove(const std::string& name);
 		void clear();
 
